@@ -14,6 +14,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
+# Robust announcement loader
 with open(ANNOUNCEMENT_FILE, 'r', encoding='utf-8') as f:
     file_content = f.read()
     file_content = file_content.replace('\r\n', '\n').replace('\r', '\n')  # Normalize line endings
@@ -21,10 +22,8 @@ with open(ANNOUNCEMENT_FILE, 'r', encoding='utf-8') as f:
     announcements = []
     for entry in entries:
         stripped_entry = entry.strip()
-        if stripped_entry:  # Only add non-empty entries
+        if stripped_entry:
             announcements.append(stripped_entry)
-        if message.content.startswith('!institute'):
-    await message.channel.send(random.choice(announcements))    
 
 async def wait_until(target_time):
     now = datetime.now()
@@ -102,4 +101,3 @@ async def on_message(message):
 
 client.loop.create_task(send_daily_announcement())
 client.run(TOKEN)
-
