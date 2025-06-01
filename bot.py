@@ -14,9 +14,9 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-# Load announcements
+# Load announcements with robust splitting
 with open(ANNOUNCEMENT_FILE, 'r', encoding='utf-8') as f:
-    file_content = f.read()
+    file_content = f.read().replace('\r\n', '\n').replace('\r', '\n')  # Normalize line endings
     announcements = [announcement.strip() for announcement in file_content.split('---') if announcement.strip()]
 
 async def wait_until(target_time):
@@ -47,7 +47,6 @@ async def on_message(message):
     if message.content.startswith('!institute'):
         await message.channel.send(random.choice(announcements))
 
-    # !report - Formal Tribunal message
     elif message.content.startswith('!report'):
         if message.mentions:
             reported_user = message.mentions[0]
@@ -65,7 +64,6 @@ async def on_message(message):
         else:
             await message.channel.send("Please specify a Summoner to report. Usage: `!report @username`.")
 
-    # !late - Casual boss-style warning
     elif message.content.startswith('!late'):
         if message.mentions:
             target_user = message.mentions[0]
@@ -77,7 +75,6 @@ async def on_message(message):
         else:
             await message.channel.send("Please specify a Summoner for the late warning. Usage: `!late @username`.")
 
-    # !absence - Serious absence notices
     elif message.content.startswith('!absence'):
         if message.mentions:
             target_user = message.mentions[0]
@@ -89,7 +86,6 @@ async def on_message(message):
         else:
             await message.channel.send("Please specify a Summoner for the absence notice. Usage: `!absence @username`.")
 
-    # !flex - Casual work call for match staffing
     elif message.content.startswith('!flex'):
         flex_messages = [
             "Summoners,\nA scheduled match is about to begin, and 3 to 5 Summoners are needed to fill available spots and keep things running smoothly.\n\nPlease report to the lobby when available.\n\nThe Institute of War",
@@ -99,3 +95,4 @@ async def on_message(message):
 
 client.loop.create_task(send_daily_announcement())
 client.run(TOKEN)
+
