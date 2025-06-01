@@ -16,7 +16,8 @@ client = discord.Client(intents=intents)
 
 # Load announcements
 with open(ANNOUNCEMENT_FILE, 'r', encoding='utf-8') as f:
-    announcements = [line.strip() for line in f if line.strip()]
+    file_content = f.read()
+    announcements = [announcement.strip() for announcement in file_content.split('---') if announcement.strip()]
 
 async def wait_until(target_time):
     now = datetime.now()
