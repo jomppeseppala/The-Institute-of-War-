@@ -3,45 +3,20 @@ import random
 import asyncio
 from datetime import datetime, time, timedelta
 import os
-from flask import Flask
-import threading
 
 TOKEN = os.environ['TOKEN']
+CHANNEL_ID = os.environ['CHANNEL_ID']  # Use channel ID as string
 ANNOUNCEMENT_FILE = 'announcements.txt'
-CHANNEL_NAME = 'summoner-lounge-arjen-sankarit'
-ANNOUNCEMENT_TIME = time(hour=14, minute=0)  # Adjust to your preferred time
+ANNOUNCEMENT_TIME = time(hour=14, minute=0)  # Adjust to your UTC time if needed
 
-# Flask app for web server
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return '''
-    <h1>The Institute of War Discord Bot</h1>
-    <p>Bot Status: Online and Running</p>
-    <p>Daily announcements at 14:00</p>
-    <p>Available commands:</p>
-    <ul>
-        <li>!institute - Get a random announcement</li>
-        <li>!report @user - Report a summoner</li>
-        <li>!late - Send late warning</li>
-        <li>!absence - Send absence notice</li>
-        <li>!flex - Call for match staffing</li>
-    </ul>
-    '''
-
-def run_flask():
-    app.run(host='0.0.0.0', port=5000)
-
-# Intents setup
+# Intents
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-# Load announcements from file with separator
+# Load announcements
 with open(ANNOUNCEMENT_FILE, 'r', encoding='utf-8') as f:
-    file_content = f.read()
-    announcements = [announcement.strip() for announcement in file_content.split('---') if announcement.strip()]
+    announcements = [line.strip() for line in f if line.strip()]
 
 async def wait_until(target_time):
     now = datetime.now()
@@ -52,29 +27,24 @@ async def wait_until(target_time):
 
 async def send_daily_announcement():
     await client.wait_until_ready()
-    channel = discord.utils.get(client.get_all_channels(), name=CHANNEL_NAME)
+    channel = client.get_channel(int(CHANNEL_ID))
     while True:
         await wait_until(ANNOUNCEMENT_TIME)
         announcement = random.choice(announcements)
         await channel.send(announcement)
-        await asyncio.sleep(86400)  # Wait 24 hours
+        await asyncio.sleep(86400)  # Wait 24h
 
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
-    replit_url = os.environ.get('REPLIT_DEV_DOMAIN', 'your-repl-url.repl.co')
-    print(f'Web server running at: https://{replit_url}')
-    client.loop.create_task(send_daily_announcement())
 
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
 
-    # !institute - Random announcement
-    if message.content.lower() == '!institute':
-        announcement = random.choice(announcements)
-        await message.channel.send(announcement)
+    if message.content.startswith('!institute'):
+        await message.channel.send(random.choice(announcements))
 
     # !report - Formal Tribunal message
     elif message.content.startswith('!report'):
@@ -126,8 +96,5 @@ async def on_message(message):
         ]
         await message.channel.send(random.choice(flex_messages))
 
-# Start Flask server in a separate thread
-flask_thread = threading.Thread(target=run_flask)
-flask_thread.start()
-
+client.loop.create_task(send_daily_announcement())
 client.run(TOKEN)
