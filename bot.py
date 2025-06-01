@@ -14,10 +14,17 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-# Load announcements with robust splitting
 with open(ANNOUNCEMENT_FILE, 'r', encoding='utf-8') as f:
-    file_content = f.read().replace('\r\n', '\n').replace('\r', '\n')  # Normalize line endings
-    announcements = [announcement.strip() for announcement in file_content.split('---') if announcement.strip()]
+    file_content = f.read()
+    file_content = file_content.replace('\r\n', '\n').replace('\r', '\n')  # Normalize line endings
+    entries = file_content.split('---')
+    announcements = []
+    for entry in entries:
+        stripped_entry = entry.strip()
+        if stripped_entry:  # Only add non-empty entries
+            announcements.append(stripped_entry)
+        if message.content.startswith('!institute'):
+    await message.channel.send(random.choice(announcements))    
 
 async def wait_until(target_time):
     now = datetime.now()
