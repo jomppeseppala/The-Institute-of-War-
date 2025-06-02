@@ -3,6 +3,21 @@ import random
 import asyncio
 from datetime import datetime, time, timedelta
 import os
+from flask import Flask
+from threading import Thread
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "I'm alive!"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
 
 TOKEN = os.environ['TOKEN']
 CHANNEL_ID = os.environ['CHANNEL_ID']  # Use channel ID as string
@@ -100,4 +115,5 @@ async def on_message(message):
         await message.channel.send(random.choice(flex_messages))
 
 client.loop.create_task(send_daily_announcement())
+keep_alive()
 client.run(TOKEN)
